@@ -9,32 +9,24 @@ class DetectorPersonajes:
         # Cargar detector de rostros de OpenCV
         self.detector_rostro = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
-        # Definir personajes para cada tipo
-        self.personajes = {
-            'Feliz': ['Mickey Mouse', 'Pikachu', 'Bob Esponja'],
-            'Triste': ['Eeyore', 'Sadness (Inside Out)', 'Dumbo'],
-            'Sorprendido': ['Scooby Doo', 'Buzz Lightyear', 'Pikachu'],
-            'Enojado': ['Hulk', 'Maléfica', 'Donald Duck'],
-            'Normal': ['Mario Bros', 'Superman', 'Elsa']
-        }
+        # Cargar imágenes de personajes disponibles
+        self.imagenes_personajes = {}
+        self.personajes_disponibles = []
+        self.cargar_imagenes()
         
         # Personaje actual y temporizador
         self.personaje_actual = None
-        self.expresion_actual = None
         self.tiempo_cambio = 0
         self.intervalo_cambio = 3  # segundos para cambiar de personaje
-        
-        # Cargar imágenes de personajes si están disponibles
-        self.imagenes_personajes = {}
-        self.cargar_imagenes()
     
     def cargar_imagenes(self):
         """Carga las imágenes de los personajes desde la carpeta 'personajes'"""
         if not os.path.exists("personajes"):
             os.makedirs("personajes")
             print("Se ha creado la carpeta 'personajes'. Añade imágenes de personajes ahí.")
+            return
         
-        # Intentar cargar todas las imágenes posibles
+        # Intentar cargar todas las imágenes disponibles
         archivos = os.listdir("personajes") if os.path.exists("personajes") else []
         print(f"Archivos en carpeta 'personajes': {len(archivos)}")
         
@@ -46,16 +38,20 @@ class DetectorPersonajes:
                     img = cv2.imread(ruta_completa, cv2.IMREAD_UNCHANGED)
                     if img is not None:
                         self.imagenes_personajes[nombre] = img
+                        self.personajes_disponibles.append(nombre)
                         print(f"Cargada imagen de: {nombre}")
                 except Exception as e:
                     print(f"Error al cargar {nombre}: {e}")
+        
+        if not self.personajes_disponibles:
+            print("¡ATENCIÓN! No se encontraron imágenes de personajes.")
+            print("Añade imágenes en formato PNG o JPG en la carpeta 'personajes'.")
     
     def elegir_personaje_aleatorio(self):
-        """Elige un personaje aleatorio basado en una expresión aleatoria"""
-        expresiones = list(self.personajes.keys())
-        expresion = random.choice(expresiones)
-        personaje = random.choice(self.personajes[expresion])
-        return expresion, personaje
+        """Elige un personaje aleatorio de los disponibles"""
+        if self.personajes_disponibles:
+            return random.choice(self.personajes_disponibles)
+        return None
     
     def mostrar_personaje(self, frame, personaje):
         """Muestra el personaje en el frame"""
@@ -115,15 +111,17 @@ class DetectorPersonajes:
             cv2.putText(frame, f"Imagen no disponible: {personaje}", 
                        (ancho - 350, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         
-        # Mostrar nombre del personaje y expresión
+        # Mostrar nombre del personaje
         texto_personaje = f"Personaje: {personaje}"
-        texto_expresion = f"Expresión: {self.expresion_actual}" if self.expresion_actual else ""
-        
         cv2.putText(frame, texto_personaje, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, texto_expresion, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     
     def iniciar_camara(self):
         """Inicia la cámara y el proceso de detección"""
+        # Verificar si hay personajes disponibles
+        if not self.personajes_disponibles:
+            print("No hay personajes disponibles. Añade imágenes en la carpeta 'personajes'.")
+            return
+            
         cap = cv2.VideoCapture(0)
         
         if not cap.isOpened():
@@ -131,9 +129,10 @@ class DetectorPersonajes:
             return
         
         print("Cámara iniciada. Presiona 'q' para salir, 'c' para cambiar de personaje manualmente.")
+        print(f"Personajes disponibles: {', '.join(self.personajes_disponibles)}")
         
         # Inicializar personaje aleatorio
-        self.expresion_actual, self.personaje_actual = self.elegir_personaje_aleatorio()
+        self.personaje_actual = self.elegir_personaje_aleatorio()
         self.tiempo_cambio = time.time()
         
         while cap.isOpened():
@@ -158,9 +157,9 @@ class DetectorPersonajes:
             # Verificar si hay que cambiar de personaje (si se detectan rostros)
             tiempo_actual = time.time()
             if len(rostros) > 0 and (tiempo_actual - self.tiempo_cambio) > self.intervalo_cambio:
-                self.expresion_actual, self.personaje_actual = self.elegir_personaje_aleatorio()
+                self.personaje_actual = self.elegir_personaje_aleatorio()
                 self.tiempo_cambio = tiempo_actual
-                print(f"¡Nuevo personaje! {self.personaje_actual} ({self.expresion_actual})")
+                print(f"¡Nuevo personaje! {self.personaje_actual}")
             
             # Mostrar el personaje actual
             if self.personaje_actual:
@@ -179,8 +178,8 @@ class DetectorPersonajes:
                 break
             elif key == ord('c'):
                 # Cambiar personaje manualmente
-                self.expresion_actual, self.personaje_actual = self.elegir_personaje_aleatorio()
-                print(f"¡Nuevo personaje manual! {self.personaje_actual} ({self.expresion_actual})")
+                self.personaje_actual = self.elegir_personaje_aleatorio()
+                print(f"¡Nuevo personaje manual! {self.personaje_actual}")
         
         cap.release()
         cv2.destroyAllWindows()
