@@ -6,11 +6,33 @@ Este proyecto te permite detectar expresiones faciales en tiempo real a través 
 
 Asegúrate de tener Python 3.8 o superior instalado. Luego, instala las dependencias necesarias con:
 
-```bash
-pip install -r requirements.txt
-```
 
 ## Configuración
+
+Para utilizar el proyecto debes tener especial cuidado con los paquetes y las versiones. Para evitar estos problemas creamos un entorno virtual y después instalamos los paquetes del requierements.txt. Para ello, seguimos los siguientes pasos.
+
+Creamos un entorno virtual.
+
+```bash
+python -m venv venv
+```
+
+Activamos el entorno virtual, ejecutamos uno de los siguientes comandos según el Sisteme Operativo.
+- Linux
+
+```bash
+source ./venv/bin/activate
+```
+
+- Windows
+```
+.\venv\Script\activate
+```
+
+Instalamos los paquetes.
+```bash
+pip install -r .\version_completa\requirements.txt
+```
 
 El proyecto consta de tres componentes principales:
 
