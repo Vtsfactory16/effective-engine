@@ -3,6 +3,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.layers import BatchNormalization
 import numpy as np
 import os
 
@@ -11,17 +12,30 @@ def crear_modelo():
     modelo = Sequential()
     
     # Primera capa convolucional
-    modelo.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48, 48, 1)))
-    modelo.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+    modelo.add(Conv2D(32, kernel_size=(3, 3), activation='relu', padding="same", input_shape=(48, 48, 1)))
+    modelo.add(BatchNormalization())    
+    modelo.add(Conv2D(64, kernel_size=(3, 3), activation='relu', padding="same"))
+    modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size=(2, 2)))
-    modelo.add(Dropout(0.25))
+    modelo.add(Dropout(0.3))
     
     # Segunda capa convolucional
-    modelo.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+    modelo.add(Conv2D(128, kernel_size=(3, 3), activation='relu', padding="same"))
+    modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size=(2, 2)))
-    modelo.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+    modelo.add(Conv2D(128, kernel_size=(3, 3), activation='relu', padding="same"))
+    modelo.add(BatchNormalization())
     modelo.add(MaxPooling2D(pool_size=(2, 2)))
-    modelo.add(Dropout(0.25))
+    modelo.add(Dropout(0.3))
+
+    # Tercera capa convolucional
+    modelo.add(Conv2D(256, kernel_size=(3, 3), activation='relu', padding="same"))
+    modelo.add(BatchNormalization())
+    modelo.add(MaxPooling2D(pool_size=(2, 2)))
+    modelo.add(Conv2D(256, kernel_size=(3, 3), activation='relu', padding="same"))
+    modelo.add(BatchNormalization())
+    modelo.add(MaxPooling2D(pool_size=(2, 2)))
+    modelo.add(Dropout(0.3))
     
     # Capa flatten
     modelo.add(Flatten())
@@ -153,7 +167,7 @@ def preparar_estructura_directorios(ruta_base='dataset'):
 
 if __name__ == "__main__":
     # Preparar directorios
-    preparar_estructura_directorios()
+    # preparar_estructura_directorios()
     
     # Preguntar si se desea entrenar el modelo
     respuesta = input("¿Deseas entrenar el modelo ahora? (s/n): ")
@@ -163,5 +177,6 @@ if __name__ == "__main__":
         ruta_datos = 'dataset'
         modelo, historial = entrenar_modelo(ruta_datos)
         print("Entrenamiento completado. Modelo guardado como 'modelo_expresiones.h5'")
+        print("Entrenamiento completado. Modelo guardado como 'modelo_expresiones.keras'")
     else:
         print("Coloca las imágenes en las carpetas correspondientes y ejecuta este script nuevamente para entrenar el modelo.") 
