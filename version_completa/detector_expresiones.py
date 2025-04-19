@@ -25,21 +25,21 @@ class DetectorExpresiones:
         # Mapeo de expresiones a personajes (personalizable)
         self.expresiones = ['Enojo', 'Disgusto', 'Miedo', 'Felicidad', 'Tristeza', 'Sorpresa', 'Neutral']
         self.personajes = {
-            'Enojo': 'Hulk',
-            'Disgusto': 'Grinch',
-            'Miedo': 'Scooby Doo',
-            'Felicidad': 'Mickey Mouse',
-            'Tristeza': 'Eeyore',
-            'Sorpresa': 'Pikachu',
-            'Neutral': 'Data (Star Trek)'
+            'Enojo': 'cara-enojo-96',
+            'Disgusto': 'cara-disgusto-96',
+            'Miedo': 'cara-miedo-96',
+            'Felicidad': 'cara-feliz-96',
+            'Tristeza': 'cara-triste-96',
+            'Sorpresa': 'cara-asombro-96',
+            'Neutral': 'cara-neutral-96'
         }
         
         # Cargar imágenes de personajes si están disponibles
         self.imagenes_personajes = {}
         for expresion, personaje in self.personajes.items():
-            ruta_imagen = f"personajes/{personaje}.png"
+            ruta_imagen = f"./personajes/{personaje}.png"
             if os.path.exists(ruta_imagen):
-                self.imagenes_personajes[expresion] = cv2.imread(ruta_imagen)
+                self.imagenes_personajes[expresion] = cv2.imread(ruta_imagen, cv2.IMREAD_UNCHANGED)
         
     def preprocesar_imagen(self, imagen, caja):
         """Preprocesa una imagen facial para la detección de expresiones"""
@@ -112,34 +112,58 @@ class DetectorExpresiones:
                     ancho_caja = int(caja_rel.width * ancho)
                     alto_caja = int(caja_rel.height * alto)
                     
-                    # Dibujar rectángulo
-                    cv2.rectangle(frame, (xmin, ymin), (xmin + ancho_caja, ymin + alto_caja), (0, 255, 0), 2)
-                    
                     # Preprocesar para el modelo
                     if self.modelo:
                         rostro_procesado = self.preprocesar_imagen(
                             rgb_frame, 
                             [xmin, ymin, ancho_caja, alto_caja]
                         )
+
                         
                         if rostro_procesado is not None:
                             # Detectar expresión
                             expresion, confianza = self.detectar_expresion(rostro_procesado)
-                            personaje = self.personajes.get(expresion, "Desconocido")
+                            # personaje = self.personajes.get(expresion, "Desconocido")
+                            
+                            # Dibujar rectángulo
+                            # cv2.rectangle(frame, (xmin, ymin), (xmin + ancho_caja, ymin + alto_caja), (0, 255, 0), 2)
                             
                             # Mostrar información
-                            texto = f"{expresion}: {personaje} ({confianza:.2f})"
+                            #texto = f"{expresion}: {personaje} ({confianza:.2f})"
+                            texto = f"{expresion} ({confianza:.2f})"
                             cv2.putText(frame, texto, (xmin, ymin - 10),
                                         cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
                             
                             # Mostrar imagen del personaje si está disponible
                             if expresion in self.imagenes_personajes:
                                 img_personaje = self.imagenes_personajes[expresion]
-                                img_redim = cv2.resize(img_personaje, (200, 200))
-                                
-                                # Ubicar en la esquina superior derecha
-                                h, w = img_redim.shape[:2]
-                                frame[10:10+h, ancho-w-10:ancho-10] = img_redim
+                                if img_personaje is not None:
+                                    img_redim = cv2.resize(img_personaje, (ancho_caja, alto_caja))
+
+                                    # Verificar si tiene canal alfa
+                                    if img_redim.shape[2] == 4:
+                                        overlay = img_redim[:, :, :3]
+                                        alpha = img_redim[:, :, 3]
+
+                                        # Crear máscaras
+                                        mask = cv2.merge([alpha, alpha, alpha])
+                                        mask = mask / 255.0
+                                        inverse_mask = 1.0 - mask
+
+                                        # Recortar la región del frame donde se va a superponer
+                                        destino = frame[ymin:ymin+alto_caja, xmin:xmin+ancho_caja]
+
+                                        if destino.shape[:2] == overlay.shape[:2]:
+                                            # Aplicar superposición
+                                            blended = (overlay * mask + destino * inverse_mask).astype(np.uint8)
+                                            frame[ymin:ymin+alto_caja, xmin:xmin+ancho_caja] = blended
+                                    else:
+                                        # Si no tiene canal alfa, lo pega directamente (sin transparencia)
+                                        destino = frame[ymin:ymin+alto_caja, xmin:xmin+ancho_caja]
+                                        if destino.shape == img_redim.shape:
+                                            # Cambia un cuadrado por la imagen del personaje
+                                            frame[ymin:ymin+alto_caja, xmin:xmin+ancho_caja] = img_redim
+
             
             # Mostrar el fotograma resultante
             cv2.imshow('Detector de Expresiones', frame)
@@ -151,18 +175,11 @@ class DetectorExpresiones:
         cap.release()
         cv2.destroyAllWindows()
 
-def crear_carpeta_personajes():
-    """Crea la carpeta de personajes si no existe"""
-    if not os.path.exists("personajes"):
-        os.makedirs("personajes")
-        print("Se ha creado la carpeta 'personajes'. Por favor, añade imágenes de personajes para cada expresión.")
-
 # Ejecutar el programa
 if __name__ == "__main__":
-    crear_carpeta_personajes()
     
     # La ruta al modelo entrenado
-    ruta_modelo = "modelo_expresiones.h5"
+    ruta_modelo = "./version_completa/modelos/1/modelo_expresiones.h5"
     
     detector = DetectorExpresiones(ruta_modelo)
     detector.iniciar_camara() 
