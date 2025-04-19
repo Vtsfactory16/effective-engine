@@ -34,6 +34,8 @@ Instalamos los paquetes.
 pip install -r .\version_completa\requirements.txt
 ```
 
+Para descargar el dataset pulse <a href="https://www.kaggle.com/datasets/msambare/fer2013?resource=download" target="_blank">aquí.</a>
+
 El proyecto consta de tres componentes principales:
 
 1. **Entrenamiento del modelo**: Puedes entrenar tu propio modelo de reconocimiento de expresiones o usar uno pre-entrenado.
