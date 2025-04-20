@@ -72,7 +72,7 @@ def entrenar_modelo(ruta_datos, batch_size=32, epocas=50):
     
     # Flujos de datos para entrenamiento y validación
     flujo_entrenamiento = generador_entrenamiento.flow_from_directory(
-        os.path.join(ruta_datos, 'train'),
+        os.path.join('version_completa', ruta_datos, 'train'),
         target_size=(48, 48),
         batch_size=batch_size,
         color_mode='grayscale',
@@ -80,12 +80,16 @@ def entrenar_modelo(ruta_datos, batch_size=32, epocas=50):
     )
     
     flujo_validacion = generador_validacion.flow_from_directory(
-        os.path.join(ruta_datos, 'validation'),
+        os.path.join('version_completa', ruta_datos, 'validation'),
         target_size=(48, 48),
         batch_size=batch_size,
         color_mode='grayscale',
         class_mode='categorical'
     )
+
+    # Muestro las clases y sus índices
+    # class_indices = flujo_entrenamiento.class_indices
+    # print("Clases: ", class_indices)
     
     # Crear modelo
     modelo = crear_modelo()
