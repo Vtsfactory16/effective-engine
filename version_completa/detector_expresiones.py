@@ -23,7 +23,7 @@ class DetectorExpresiones:
                 print(f"Error al cargar el modelo: {e}")
         
         # Mapeo de expresiones a personajes (personalizable)
-        self.expresiones = ['Enojo', 'Disgusto', 'Miedo', 'Felicidad', 'Tristeza', 'Sorpresa', 'Neutral']
+        self.expresiones = ['Enojo', 'Disgusto', 'Miedo', 'Felicidad', 'Neutral', 'Tristeza', 'Sorpresa']
         self.personajes = {
             'Enojo': 'cara-enojo-96',
             'Disgusto': 'cara-disgusto-96',
@@ -179,7 +179,7 @@ class DetectorExpresiones:
 if __name__ == "__main__":
     
     # La ruta al modelo entrenado
-    ruta_modelo = "./version_completa/modelos/1/modelo_expresiones.h5"
+    ruta_modelo = "./version_completa/modelos/3/modelo_expresiones.h5"
     
     detector = DetectorExpresiones(ruta_modelo)
     detector.iniciar_camara() 
