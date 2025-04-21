@@ -164,9 +164,12 @@ class DetectorExpresiones:
                                             # Cambia un cuadrado por la imagen del personaje
                                             frame[ymin:ymin+alto_caja, xmin:xmin+ancho_caja] = img_redim
 
-            
+            cv2.namedWindow('Video de la pantalla completa', cv2.WINDOW_NORMAL)
+
+            cv2.setWindowProperty('Video de la pantalla completa', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
             # Mostrar el fotograma resultante
-            cv2.imshow('Detector de Expresiones', frame)
+            cv2.imshow('Video de la pantalla completa', frame)
             
             # Salir con 'q'
             if cv2.waitKey(1) & 0xFF == ord('q'):
